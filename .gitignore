@@ -89,3 +89,6 @@ poetry.lock
 # Other
 *.bak
 *.swp
+
+# Project specific
+generated_videos/
