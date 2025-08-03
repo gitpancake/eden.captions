@@ -6,8 +6,9 @@ High-level interface for generating AI advertisement videos using the Captions A
 
 import os
 import time
+import random
 from datetime import datetime
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 from urllib.parse import urlparse
 import logging
 
@@ -31,23 +32,25 @@ class VideoGenerator:
     def generate_ad_video(
         self,
         script: str,
-        creator_name: str,
+        creator_name: Optional[str] = None,
         media_urls: list = None,
         resolution: str = "fhd",
         webhook_id: str = None,
         output_dir: str = "./generated_videos",
-        filename: Optional[str] = None
+        filename: Optional[str] = None,
+        use_random_voice: bool = False
     ) -> str:
         """
         Generate an AI advertisement video.
         
         Args:
             script: The script for the advertisement
-            creator_name: Name of the AI creator to use
+            creator_name: Name of the AI creator to use (optional, will use random if not specified)
             media_urls: List of media URLs to include in the video
             resolution: Video resolution (default: "fhd")
             output_dir: Directory to save the generated video
             filename: Custom filename for the video (optional)
+            use_random_voice: Force random voice selection (overrides creator_name if True)
             
         Returns:
             Path to the generated video file
@@ -55,6 +58,11 @@ class VideoGenerator:
         Raises:
             CaptionsAPIError: If video generation fails
         """
+        # Select creator (random if not specified or if use_random_voice is True)
+        if use_random_voice or not creator_name:
+            creator_name = self._select_random_creator()
+            logger.info(f"Selected random creator: {creator_name}")
+        
         # Validate inputs
         self._validate_inputs(script, creator_name, resolution)
         
@@ -83,6 +91,34 @@ class VideoGenerator:
         except CaptionsAPIError as e:
             logger.error(f"Video generation failed: {str(e)}")
             raise
+    
+    def _select_random_creator(self) -> str:
+        """
+        Select a random creator from available options.
+        
+        Returns:
+            Randomly selected creator name
+            
+        Raises:
+            CaptionsAPIError: If no creators are available
+        """
+        try:
+            creators_info = self.list_creators()
+            supported_creators = creators_info.get("supportedCreators", [])
+            
+            if not supported_creators:
+                # Fallback to common creators if API doesn't return any
+                fallback_creators = ["Jason", "Sarah", "Mike", "Emma", "David", "Lisa"]
+                logger.warning("No creators returned from API, using fallback list")
+                return random.choice(fallback_creators)
+            
+            return random.choice(supported_creators)
+            
+        except Exception as e:
+            logger.error(f"Failed to get creators for random selection: {str(e)}")
+            # Fallback to common creators
+            fallback_creators = ["Jason", "Sarah", "Mike", "Emma", "David", "Lisa"]
+            return random.choice(fallback_creators)
     
     def _validate_inputs(self, script: str, creator_name: str, resolution: str):
         """Validate input parameters."""

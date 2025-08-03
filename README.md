@@ -65,10 +65,18 @@ A Python application that generates professional AI-powered advertisement videos
 
 ### Basic Video Generation
 
-Generate a video using the default `product.json`:
+Generate a video using the default `product.json` (will use random voice):
 
 ```bash
 python main.py generate
+```
+
+### Random Voice Generation
+
+Generate a video with a randomly selected AI creator:
+
+```bash
+python main.py generate --random-voice
 ```
 
 ### Custom Configuration
@@ -82,6 +90,15 @@ python main.py generate \
   --filename "my_custom_video"
 ```
 
+### Specific Creator
+
+Generate a video with a specific AI creator:
+
+```bash
+python main.py generate --product-file "my_product.json"
+# (Make sure creatorName is specified in your product.json)
+```
+
 ### Product Configuration
 
 Create a `product.json` file with your video specifications:
@@ -89,20 +106,25 @@ Create a `product.json` file with your video specifications:
 ```json
 {
   "script": "Transform your Toyota 4Runner with our premium liftgate supports! These heavy-duty gas struts provide effortless lifting and secure holding, making loading and unloading a breeze. Perfect for outdoor enthusiasts, contractors, and anyone who needs reliable access to their cargo area. Easy installation, durable construction, and backed by our satisfaction guarantee. Don't struggle with a heavy liftgate - upgrade to professional-grade supports today!",
-  "creatorName": "Jason",
+  "creatorName": null,
   "mediaUrls": ["https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?w=800&h=600&fit=crop", "https://images.unsplash.com/photo-1580273916550-e323be2ae537?w=800&h=600&fit=crop"],
   "webhookId": null,
   "resolution": "fhd"
 }
+
+*Note: `creatorName` is set to `null` to use random voice selection. Set to a specific creator name to use that voice.*
 ```
 
 **Required Fields:**
 
 - `script`: Your advertisement script (minimum 10 characters)
-- `creatorName`: AI creator name (use `python main.py creators` to see available options)
 - `mediaUrls`: Array of image URLs (at least one required)
 - `webhookId`: Webhook identifier (can be null)
 - `resolution`: Video resolution ("fhd", "hd", or "4k")
+
+**Optional Fields:**
+
+- `creatorName`: AI creator name (optional - will use random voice if not specified or null)
 
 ### Available Commands
 
@@ -122,10 +144,17 @@ Create a `product.json` file with your video specifications:
 - `--output-dir, -o`: Directory to save videos (default: "./generated_videos")
 - `--api-key`: API key (can also use environment variable)
 - `--filename, -f`: Custom filename for the video
+- `--random-voice, -r`: Use a random voice instead of specified creator
 
 **Examples:**
 
 ```bash
+# Generate with random voice (default behavior)
+python main.py generate
+
+# Force random voice selection
+python main.py generate --random-voice
+
 # Generate with custom product file
 python main.py generate --product-file "my_product.json"
 
@@ -220,27 +249,39 @@ eden.captions/
 
 ## Examples
 
-### Example 1: Product Launch Video
+### Example 1: Random Voice (Default)
 
 ```json
 {
   "script": "Introducing our revolutionary new product! Transform your daily routine with cutting-edge technology that makes life easier. Perfect for busy professionals who demand the best. Easy to use, powerful results, and backed by our satisfaction guarantee. Don't miss out - upgrade today!",
-  "creatorName": "Sarah",
+  "creatorName": null,
   "mediaUrls": ["https://images.unsplash.com/photo-1234567890?w=800&h=600&fit=crop"],
   "webhookId": null,
   "resolution": "fhd"
 }
 ```
 
-### Example 2: Service Promotion
+### Example 2: Specific Creator
 
 ```json
 {
   "script": "Looking for reliable automotive solutions? Our professional team delivers exceptional service with every visit. From routine maintenance to complex repairs, we've got you covered. Trusted by thousands of satisfied customers. Book your appointment today and experience the difference!",
-  "creatorName": "Jason",
+  "creatorName": "Sarah",
   "mediaUrls": ["https://images.unsplash.com/photo-0987654321?w=800&h=600&fit=crop", "https://images.unsplash.com/photo-1122334455?w=800&h=600&fit=crop"],
   "webhookId": null,
   "resolution": "hd"
+}
+```
+
+### Example 3: Service Promotion with Random Voice
+
+```json
+{
+  "script": "Transform your business with our professional solutions! Our team delivers exceptional results with every project. From startups to enterprise, we've got you covered. Trusted by thousands of satisfied clients. Contact us today and experience the difference!",
+  "creatorName": null,
+  "mediaUrls": ["https://images.unsplash.com/photo-0987654321?w=800&h=600&fit=crop"],
+  "webhookId": null,
+  "resolution": "fhd"
 }
 ```
 

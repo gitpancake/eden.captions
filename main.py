@@ -73,7 +73,8 @@ def cli():
 @click.option("--output-dir", "-o", default="./generated_videos", help="Output directory for videos")
 @click.option("--api-key", help="Captions API key (or set CAPTIONS_API_KEY env var)")
 @click.option("--filename", "-f", help="Custom filename for the video")
-def generate(product_file: str, output_dir: str, api_key: Optional[str], filename: Optional[str]):
+@click.option("--random-voice", "-r", is_flag=True, help="Use a random voice instead of specified creator")
+def generate(product_file: str, output_dir: str, api_key: Optional[str], filename: Optional[str], random_voice: bool):
     """Generate an AI advertisement video from product.json."""
     
     try:
@@ -90,7 +91,7 @@ def generate(product_file: str, output_dir: str, api_key: Optional[str], filenam
                 sys.exit(1)
         
         # Validate required fields
-        required_fields = ["script", "creatorName", "mediaUrls", "webhookId", "resolution"]
+        required_fields = ["script", "mediaUrls", "webhookId", "resolution"]
         missing_fields = []
         
         for field in required_fields:
@@ -110,9 +111,18 @@ def generate(product_file: str, output_dir: str, api_key: Optional[str], filenam
                 else:
                     missing_fields.append(field)
         
+        # Check creatorName separately (optional if using random voice)
+        creator_name = product_data.get("creatorName")
+        if not random_voice and (not creator_name or not creator_name.strip()):
+            missing_fields.append("creatorName")
+        
         if missing_fields:
             print_error(f"Missing or invalid required fields in {product_file}: {', '.join(missing_fields)}")
-            print_info("Required fields: script, creatorName, mediaUrls (non-empty array), webhookId, resolution")
+            if "creatorName" in missing_fields:
+                print_info("Required fields: script, creatorName, mediaUrls (non-empty array), webhookId, resolution")
+                print_info("Or use --random-voice to automatically select a creator")
+            else:
+                print_info("Required fields: script, mediaUrls (non-empty array), webhookId, resolution")
             sys.exit(1)
         
         # Validate script length
@@ -134,7 +144,13 @@ def generate(product_file: str, output_dir: str, api_key: Optional[str], filenam
         
         print_info(f"✅ Product configuration loaded from {product_file}")
         print_info(f"📝 Script length: {len(product_data['script'])} characters")
-        print_info(f"🎭 Creator: {product_data['creatorName']}")
+        
+        # Show creator information
+        if random_voice:
+            print_info(f"🎭 Creator: Random (will be selected automatically)")
+        else:
+            print_info(f"🎭 Creator: {product_data.get('creatorName', 'Not specified')}")
+        
         print_info(f"🖼️  Media URLs: {len(product_data['mediaUrls'])} images")
         print_info(f"📐 Resolution: {product_data['resolution']}")
         
@@ -147,12 +163,13 @@ def generate(product_file: str, output_dir: str, api_key: Optional[str], filenam
         # Generate the video
         video_path = generator.generate_ad_video(
             script=product_data["script"],
-            creator_name=product_data["creatorName"],
+            creator_name=product_data.get("creatorName") if not random_voice else None,
             media_urls=product_data["mediaUrls"],
             resolution=product_data["resolution"],
             webhook_id=product_data["webhookId"],
             output_dir=output_dir,
-            filename=filename
+            filename=filename,
+            use_random_voice=random_voice
         )
         
         print_success("✅ Video generation completed!")
@@ -163,7 +180,19 @@ def generate(product_file: str, output_dir: str, api_key: Optional[str], filenam
         # Display success information
         success_table = Table(title="Video Generation Complete!", show_header=False)
         success_table.add_row("Video Path", video_path)
-        success_table.add_row("Creator", product_data["creatorName"])
+        
+        # Show the actual creator used
+        if random_voice:
+            # Extract creator from filename
+            filename_parts = os.path.basename(video_path).split('_')
+            if len(filename_parts) >= 3:
+                actual_creator = filename_parts[2]  # ai_ad_[Creator]_[Resolution]_[Timestamp].mp4
+                success_table.add_row("Creator", f"{actual_creator} (randomly selected)")
+            else:
+                success_table.add_row("Creator", "Randomly selected")
+        else:
+            success_table.add_row("Creator", product_data.get("creatorName", "Not specified"))
+        
         success_table.add_row("Resolution", product_data["resolution"].upper())
         success_table.add_row("File Size", format_file_size(file_size))
         
