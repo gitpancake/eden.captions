@@ -141,31 +141,21 @@ def generate(product_file: str, output_dir: str, api_key: Optional[str], filenam
         # Initialize video generator
         generator = VideoGenerator(api_key)
         
-        # Create progress display
-        with Progress(
-            SpinnerColumn(),
-            TextColumn("[progress.description]{task.description}"),
-            BarColumn(),
-            TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
-            TimeElapsedColumn(),
-            console=console
-        ) as progress:
-            
-            # Task for video generation
-            task = progress.add_task("Generating AI advertisement video...", total=None)
-            
-            # Generate the video
-            video_path = generator.generate_ad_video(
-                script=product_data["script"],
-                creator_name=product_data["creatorName"],
-                media_urls=product_data["mediaUrls"],
-                resolution=product_data["resolution"],
-                webhook_id=product_data["webhookId"],
-                output_dir=output_dir,
-                filename=filename
-            )
-            
-            progress.update(task, completed=True)
+        # Simple status display with timer
+        print_info("🎬 Starting AI video generation...")
+        
+        # Generate the video
+        video_path = generator.generate_ad_video(
+            script=product_data["script"],
+            creator_name=product_data["creatorName"],
+            media_urls=product_data["mediaUrls"],
+            resolution=product_data["resolution"],
+            webhook_id=product_data["webhookId"],
+            output_dir=output_dir,
+            filename=filename
+        )
+        
+        print_success("✅ Video generation completed!")
         
         # Get file size
         file_size = os.path.getsize(video_path) / (1024 * 1024)  # MB
@@ -176,7 +166,6 @@ def generate(product_file: str, output_dir: str, api_key: Optional[str], filenam
         success_table.add_row("Creator", product_data["creatorName"])
         success_table.add_row("Resolution", product_data["resolution"].upper())
         success_table.add_row("File Size", format_file_size(file_size))
-        success_table.add_row("Webhook ID", product_data["webhookId"])
         
         console.print(success_table)
         print_success(f"Video saved to: {video_path}")

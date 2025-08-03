@@ -146,13 +146,13 @@ class CaptionsAPIClient:
         response = self._make_request("POST", endpoint, json=payload)
         return response
     
-    def wait_for_completion(self, operation_id: str, timeout: int = 300, poll_interval: int = 10) -> str:
+    def wait_for_completion(self, operation_id: str, timeout: int = 3600, poll_interval: int = 10) -> str:
         """
         Wait for a video generation job to complete.
         
         Args:
             operation_id: The operation ID to wait for
-            timeout: Maximum time to wait in seconds (default: 300)
+            timeout: Maximum time to wait in seconds (default: 3600 = 1 hour)
             poll_interval: Time between status checks in seconds (default: 10)
             
         Returns:
